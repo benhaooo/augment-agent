@@ -415,9 +415,6 @@ import OperationCard from '../components/OperationCard.vue'
 import ProgressIndicator from '../components/ProgressIndicator.vue'
 import StatusBadge from '../components/StatusBadge.vue'
 
-console.log(
-  '刘家浩'
-)
 // 状态管理
 const store = useAugmentCleanerStore()
 

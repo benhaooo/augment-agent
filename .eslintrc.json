@@ -1,0 +1,52 @@
+{
+  "root": true,
+  "extends": [
+    "plugin:vue/vue3-essential",
+    "eslint:recommended",
+    "@vue/eslint-config-typescript",
+    "@vue/eslint-config-prettier"
+  ],
+  "parserOptions": {
+    "ecmaVersion": "latest"
+  },
+  "env": {
+    "node": true,
+    "browser": true,
+    "es2022": true
+  },
+  "rules": {
+    "vue/multi-word-component-names": "off",
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "no-console": "off",
+    "no-debugger": "off",
+
+    // Prettier 兼容性规则 - 这些规则会被 Prettier 处理
+    "indent": "off",
+    "linebreak-style": "off",
+    "quotes": "off",
+    "semi": "off",
+    "comma-dangle": "off",
+    "max-len": "off",
+    "object-curly-spacing": "off",
+    "array-bracket-spacing": "off",
+    "computed-property-spacing": "off",
+    "space-before-function-paren": "off",
+
+    // TypeScript 特定的 Prettier 兼容性
+    "@typescript-eslint/indent": "off",
+    "@typescript-eslint/quotes": "off",
+    "@typescript-eslint/semi": "off",
+    "@typescript-eslint/comma-dangle": "off",
+    "@typescript-eslint/space-before-function-paren": "off"
+  },
+  "overrides": [
+    {
+      "files": ["src/main/**/*", "src/preload/**/*", "build/**/*"],
+      "env": {
+        "node": true,
+        "browser": false
+      },
+      "extends": ["eslint:recommended", "@vue/eslint-config-typescript"]
+    }
+  ]
+}

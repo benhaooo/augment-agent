@@ -1,0 +1,33 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "include": ["src/renderer/**/*", "src/renderer/**/*.vue"],
+  "exclude": ["src/main/**/*", "src/preload/**/*", "node_modules", "dist"],
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "allowJs": false,
+    "esModuleInterop": false,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "noEmit": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/renderer/*"],
+      "@/components/*": ["src/renderer/components/*"],
+      "@/views/*": ["src/renderer/views/*"],
+      "@/composables/*": ["src/renderer/composables/*"],
+      "@/types/*": ["src/renderer/types/*"]
+    },
+    "types": ["vite/client"]
+  }
+}

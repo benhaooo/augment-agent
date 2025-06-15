@@ -7,20 +7,6 @@ import { deepClone } from '@/utils'
 const defaultSettings: AppSettings = {
   theme: 'light',
   fontSize: 14,
-  notifications: {
-    desktop: true,
-    sound: false,
-    autoHide: true,
-  },
-  performance: {
-    hardwareAcceleration: true,
-    backgroundProcessing: false,
-    memoryLimit: 1024,
-  },
-  privacy: {
-    analytics: false,
-    crashReports: true,
-  },
 }
 
 const STORAGE_KEY = 'app-settings'
@@ -41,51 +27,6 @@ const validateSettings = (settings: any): ValidationResult => {
   // Validate fontSize
   if (typeof settings.fontSize !== 'number' || settings.fontSize < 12 || settings.fontSize > 20) {
     errors.push('Font size must be a number between 12 and 20')
-  }
-
-  // Validate notifications
-  if (!settings.notifications || typeof settings.notifications !== 'object') {
-    errors.push('Notifications settings must be an object')
-  } else {
-    if (typeof settings.notifications.desktop !== 'boolean') {
-      errors.push('Notifications.desktop must be a boolean')
-    }
-    if (typeof settings.notifications.sound !== 'boolean') {
-      errors.push('Notifications.sound must be a boolean')
-    }
-    if (typeof settings.notifications.autoHide !== 'boolean') {
-      errors.push('Notifications.autoHide must be a boolean')
-    }
-  }
-
-  // Validate performance
-  if (!settings.performance || typeof settings.performance !== 'object') {
-    errors.push('Performance settings must be an object')
-  } else {
-    if (typeof settings.performance.hardwareAcceleration !== 'boolean') {
-      errors.push('Performance.hardwareAcceleration must be a boolean')
-    }
-    if (typeof settings.performance.backgroundProcessing !== 'boolean') {
-      errors.push('Performance.backgroundProcessing must be a boolean')
-    }
-    if (
-      typeof settings.performance.memoryLimit !== 'number' ||
-      settings.performance.memoryLimit < 256
-    ) {
-      errors.push('Performance.memoryLimit must be a number >= 256')
-    }
-  }
-
-  // Validate privacy
-  if (!settings.privacy || typeof settings.privacy !== 'object') {
-    errors.push('Privacy settings must be an object')
-  } else {
-    if (typeof settings.privacy.analytics !== 'boolean') {
-      errors.push('Privacy.analytics must be a boolean')
-    }
-    if (typeof settings.privacy.crashReports !== 'boolean') {
-      errors.push('Privacy.crashReports must be a boolean')
-    }
   }
 
   return { isValid: errors.length === 0, errors }
@@ -299,14 +240,7 @@ export const useSettingsStore = defineStore('settings', () => {
     { immediate: false }
   )
 
-  // Watch all other settings changes
-  watch(
-    () => [settings.value.notifications, settings.value.performance, settings.value.privacy],
-    () => {
-      debouncedAutoSave()
-    },
-    { deep: true, immediate: false }
-  )
+
 
   return {
     // State

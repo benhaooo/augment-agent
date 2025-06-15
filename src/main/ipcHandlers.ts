@@ -366,6 +366,50 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
     }
   })
 
+  // VSCode process control handlers
+  ipcMain.handle('process:closeVSCode', async () => {
+    try {
+      const platform = process.platform
+      let command: string
+      
+      if (platform === 'win32') {
+        command = 'taskkill /F /IM Code.exe'
+      } else if (platform === 'darwin') {
+        command = 'pkill -9 "Visual Studio Code"'
+      } else {
+        command = 'pkill -9 code'
+      }
+      
+      await execAsync(command)
+      return true
+    } catch (error) {
+      console.error('Failed to close VSCode:', error)
+      return false
+    }
+  })
+  
+  ipcMain.handle('process:reopenVSCode', async () => {
+    try {
+      const platform = process.platform
+      let command: string
+      
+      if (platform === 'win32') {
+        command = 'start /b "" "code"'
+      } else if (platform === 'darwin') {
+        command = 'open -a "Visual Studio Code"'
+      } else {
+        command = 'nohup code > /dev/null 2>&1 &'
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 500))
+      await execAsync(command)
+      return true
+    } catch (error) {
+      console.error('Failed to reopen VSCode:', error)
+      return false
+    }
+  })
+
   // Shell handlers
   ipcMain.handle('shell:openExternal', async (_, url: string) => {
     try {
@@ -487,6 +531,82 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
       throw new Error(`恢复备份失败: ${error instanceof Error ? error.message : String(error)}`)
     }
   })
+
+  // VS Code 控制处理程序
+  ipcMain.handle('vscode:isRunning', async () => {
+    return await checkVSCodeRunning()
+  })
+
+  ipcMain.handle('vscode:close', async () => {
+    try {
+      const platform = process.platform
+      let command = ''
+
+      if (platform === 'win32') {
+        // 使用/F强制关闭，确保能关闭所有VS Code进程
+        command = 'taskkill /F /IM Code.exe'
+      } else if (platform === 'darwin') {
+        // 使用-9强制终止所有相关进程
+        command = 'pkill -9 -f "Visual Studio Code" || pkill -9 -x "Code"'
+      } else {
+        // 使用-9强制终止所有相关进程
+        command = 'pkill -9 -f "code" || pkill -9 -x "code-oss" || true'
+      }
+
+      try {
+        await execAsync(command)
+        // 等待一小段时间确保进程已关闭
+        await new Promise(resolve => setTimeout(resolve, 500))
+        return true
+      } catch (execError) {
+        // 在Windows上，如果没有找到进程，taskkill会返回错误
+        // 但这种情况我们应该返回true，因为这意味着VS Code已经不在运行
+        console.log('关闭VS Code结果:', execError.message)
+        
+        // 直接重新检查VS Code是否在运行
+        const isRunning = await checkVSCodeRunning()
+        return !isRunning
+      }
+    } catch (error) {
+      console.error('关闭 VS Code 失败:', error)
+      return false
+    }
+  })
+
+  ipcMain.handle('vscode:reopen', async () => {
+    try {
+      const platform = process.platform
+      let command = ''
+
+      // 使用不同的方法在后台启动VS Code，避免显示命令窗口
+      if (platform === 'win32') {
+        // 在Windows上使用start /b命令隐藏命令窗口
+        command = 'start /b "" "code"'
+      } else if (platform === 'darwin') {
+        command = 'open -a "Visual Studio Code"'
+      } else {
+        // 在Linux上使用nohup并将输出重定向到/dev/null
+        command = 'nohup code > /dev/null 2>&1 &'
+      }
+
+      // 先检查VS Code是否已经关闭
+      const isRunning = await checkVSCodeRunning()
+      if (isRunning) {
+        console.log('VS Code 仍在运行，尝试先关闭...')
+        await execAsync(platform === 'win32' ? 'taskkill /F /IM Code.exe' : 'pkill -9 -f "code"')
+        // 等待进程完全退出
+        await new Promise(resolve => setTimeout(resolve, 1000))
+      }
+
+      // 添加延迟确保命令正确执行
+      await execAsync(command)
+      
+      return true
+    } catch (error) {
+      console.error('重新打开 VS Code 失败:', error)
+      return false
+    }
+  })
 }
 
 /**
@@ -516,15 +636,54 @@ export function removeIpcHandlers() {
     'sqlite:getDatabaseInfo',
     'sqlite:previewAugmentRecords',
     'process:isVSCodeRunning',
+    'process:closeVSCode',
+    'process:reopenVSCode',
     'workspace:getInfo',
     'workspace:previewContents',
     'workspace:cleanStorage',
     'workspace:createBackup',
     'workspace:restoreBackup',
     'shell:openExternal',
+    'vscode:isRunning',
+    'vscode:close',
+    'vscode:reopen',
   ]
 
   handlers.forEach(handler => {
     ipcMain.removeAllListeners(handler)
   })
+}
+
+// 辅助函数：检查VS Code是否在运行
+async function checkVSCodeRunning(): Promise<boolean> {
+  try {
+    const platform = process.platform
+    let command = ''
+
+    if (platform === 'win32') {
+      command = 'tasklist /FI "IMAGENAME eq Code.exe" | findstr /i "Code.exe" >nul 2>&1 && echo running || echo not-running'
+    } else if (platform === 'darwin') {
+      command = 'pgrep -f "Visual Studio Code" || pgrep -x "Code" || pgrep -f "Electron.*Code"'
+    } else {
+      command = 'pgrep -x "code" || pgrep -x "code-oss" || pgrep -f "electron.*code"'
+    }
+
+    try {
+      const { stdout } = await execAsync(command)
+      
+      if (platform === 'win32') {
+        return stdout.trim() === 'running'
+      }
+      
+      return stdout.trim().length > 0
+    } catch (execError) {
+      if (execError.code === 1) {
+        return false
+      }
+      throw execError
+    }
+  } catch (error) {
+    console.error('检查 VS Code 运行状态失败:', error)
+    return false
+  }
 }

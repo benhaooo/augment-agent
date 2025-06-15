@@ -73,8 +73,8 @@ const platform = ref('unknown')
 const showAboutModal = ref(false)
 
 const navigationRoutes = [
-  { path: '/', name: 'Home' },
-  { path: '/features', name: 'Features' },
+  { path: '/', name: 'AugmentCode 清理器' },
+  { path: '/email', name: '随机邮箱生成器' },
   { path: '/settings', name: 'Settings' },
 ]
 

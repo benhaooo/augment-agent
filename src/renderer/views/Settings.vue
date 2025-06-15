@@ -59,116 +59,6 @@
       </div>
     </div>
 
-    <!-- Notification Settings -->
-    <div class="card mb-8">
-      <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Notifications</h2>
-
-      <div class="space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="font-medium text-gray-900 dark:text-gray-100">Desktop Notifications</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              Show notifications on your desktop
-            </p>
-          </div>
-          <ToggleSwitch v-model="settings.notifications.desktop" />
-        </div>
-
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="font-medium text-gray-900 dark:text-gray-100">Sound Notifications</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              Play sound when notifications appear
-            </p>
-          </div>
-          <ToggleSwitch v-model="settings.notifications.sound" />
-        </div>
-
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="font-medium text-gray-900 dark:text-gray-100">Auto-hide Notifications</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              Automatically hide notifications after 5 seconds
-            </p>
-          </div>
-          <ToggleSwitch v-model="settings.notifications.autoHide" />
-        </div>
-      </div>
-    </div>
-
-    <!-- Performance Settings -->
-    <div class="card mb-8">
-      <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Performance</h2>
-
-      <div class="space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="font-medium text-gray-900 dark:text-gray-100">Hardware Acceleration</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              Use GPU acceleration when available
-            </p>
-          </div>
-          <ToggleSwitch v-model="settings.performance.hardwareAcceleration" />
-        </div>
-
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="font-medium text-gray-900 dark:text-gray-100">Background Processing</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              Continue processing when window is minimized
-            </p>
-          </div>
-          <ToggleSwitch v-model="settings.performance.backgroundProcessing" />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >Memory Usage Limit</label
-          >
-          <div class="flex items-center space-x-4">
-            <span class="text-sm text-gray-500 dark:text-gray-400">Low</span>
-            <input
-              v-model="settings.performance.memoryLimit"
-              type="range"
-              min="512"
-              max="4096"
-              step="256"
-              class="flex-1 accent-primary-600 dark:accent-primary-400"
-            />
-            <span class="text-sm text-gray-500 dark:text-gray-400">High</span>
-            <span class="text-sm font-medium w-16 text-gray-900 dark:text-gray-100"
-              >{{ settings.performance.memoryLimit }}MB</span
-            >
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Privacy Settings -->
-    <div class="card mb-8">
-      <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Privacy</h2>
-
-      <div class="space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="font-medium text-gray-900 dark:text-gray-100">Analytics</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              Help improve the app by sharing usage data
-            </p>
-          </div>
-          <ToggleSwitch v-model="settings.privacy.analytics" />
-        </div>
-
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="font-medium text-gray-900 dark:text-gray-100">Crash Reports</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">Automatically send crash reports</p>
-          </div>
-          <ToggleSwitch v-model="settings.privacy.crashReports" />
-        </div>
-      </div>
-    </div>
-
     <!-- Actions -->
     <div class="flex justify-between">
       <button @click="resetSettings" class="btn btn-secondary">Reset to Defaults</button>
@@ -191,7 +81,6 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import ToggleSwitch from '@/components/ToggleSwitch.vue'
 import { useSettingsStore } from '@/stores/settings'
 
 // 使用 Pinia Store

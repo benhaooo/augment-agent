@@ -14,9 +14,9 @@ export interface AugmentCleanResult {
 }
 
 export interface CleaningProgress {
-  step: 'telemetry' | 'database' | 'workspace' | 'complete'
+  step: 'preparing' | 'backup' | 'telemetry' | 'database' | 'workspace' | 'finalizing' | 'completed' | 'complete'
   message: string
-  progress: number // 0-100
+  percentage: number // 0-100
 }
 
 export class AugmentCleanerService {
@@ -33,7 +33,7 @@ export class AugmentCleanerService {
       onProgress?.({
         step: 'telemetry',
         message: '正在修改遥测 ID...',
-        progress: 10,
+        percentage: 10,
       })
 
       const telemetryResult = await JsonModifierService.modifyTelemetryIds()
@@ -41,14 +41,14 @@ export class AugmentCleanerService {
       onProgress?.({
         step: 'telemetry',
         message: '遥测 ID 修改完成',
-        progress: 33,
+        percentage: 33,
       })
 
       // 步骤 2: 清理 SQLite 数据库
       onProgress?.({
         step: 'database',
         message: '正在清理 SQLite 数据库...',
-        progress: 40,
+        percentage: 40,
       })
 
       const databaseResult = await SqliteModifierService.cleanAugmentData()
@@ -56,14 +56,14 @@ export class AugmentCleanerService {
       onProgress?.({
         step: 'database',
         message: '数据库清理完成',
-        progress: 66,
+        percentage: 66,
       })
 
       // 步骤 3: 清理工作区存储
       onProgress?.({
         step: 'workspace',
         message: '正在清理工作区存储...',
-        progress: 70,
+        percentage: 70,
       })
 
       const workspaceResult = await WorkspaceCleanerService.cleanWorkspaceStorage()
@@ -71,7 +71,7 @@ export class AugmentCleanerService {
       onProgress?.({
         step: 'complete',
         message: '所有清理操作完成',
-        progress: 100,
+        percentage: 100,
       })
 
       return {
@@ -166,6 +166,39 @@ export class AugmentCleanerService {
       return isRunning
     } catch {
       return false
+    }
+  }
+
+  /**
+   * 单独清理遥测 ID
+   */
+  static async cleanTelemetryIds(storagePath: string): Promise<TelemetryModificationResult> {
+    try {
+      return await JsonModifierService.modifyTelemetryIds(storagePath)
+    } catch (error) {
+      throw new Error(`清理遥测 ID 失败: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+
+  /**
+   * 单独清理数据库
+   */
+  static async cleanDatabase(dbPath: string): Promise<DatabaseCleanResult> {
+    try {
+      return await SqliteModifierService.cleanAugmentData(dbPath)
+    } catch (error) {
+      throw new Error(`清理数据库失败: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+
+  /**
+   * 单独清理工作区
+   */
+  static async cleanWorkspace(workspacePath: string): Promise<WorkspaceCleanResult> {
+    try {
+      return await WorkspaceCleanerService.cleanWorkspaceStorage(workspacePath)
+    } catch (error) {
+      throw new Error(`清理工作区失败: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 

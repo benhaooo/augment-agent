@@ -98,6 +98,47 @@
         </div>
       </div>
 
+      <!-- 全屏加载遮罩 -->
+      <div v-if="store.isCleaning || store.isLoading" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full text-center">
+          <div class="mb-4">
+            <svg class="animate-spin h-10 w-10 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            {{ store.cleaningProgress?.message || '处理中...' }}
+          </h3>
+          <div v-if="store.cleaningProgress" class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-2">
+            <div class="bg-blue-600 h-2.5 rounded-full" :style="{ width: `${store.cleaningProgress.percentage}%` }"></div>
+          </div>
+          <div v-if="store.cleaningProgress" class="mb-4 text-xs text-gray-500 dark:text-gray-400 text-right">
+            {{ store.cleaningProgress.percentage }}%
+          </div>
+          <div v-if="store.cleaningProgress" class="mb-4">
+            <div class="grid grid-cols-5 gap-1">
+              <div 
+                v-for="(step, index) in ['准备', '备份', '遥测', '数据库', '工作区']" 
+                :key="index"
+                class="h-1 rounded-full"
+                :class="[
+                  getStepIndex(store.cleaningProgress.step) >= index 
+                    ? 'bg-blue-500' 
+                    : 'bg-gray-200 dark:bg-gray-700'
+                ]"
+              ></div>
+            </div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {{ getStepDescription(store.cleaningProgress.step) }}
+            </div>
+          </div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            请勿关闭此窗口，操作完成后将自动继续
+          </p>
+        </div>
+      </div>
+
       <!-- 主要内容区域 -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- 左侧：系统状态和路径信息 -->
@@ -187,7 +228,7 @@
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
               <button
                 @click="refreshStatus"
-                :disabled="store.isChecking"
+                :disabled="store.isChecking || store.isCleaning || store.isLoading"
                 class="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span v-if="store.isChecking">检查中...</span>
@@ -242,7 +283,7 @@
               <template #actions>
                 <button
                   @click="previewTelemetryChanges"
-                  :disabled="!store.systemStatus?.storageFileExists"
+                  :disabled="!store.systemStatus?.storageFileExists || store.isCleaning || store.isLoading"
                   class="text-sm bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-md hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   预览
@@ -268,7 +309,7 @@
               <template #actions>
                 <button
                   @click="previewDatabaseChanges"
-                  :disabled="!store.systemStatus?.databaseFileExists"
+                  :disabled="!store.systemStatus?.databaseFileExists || store.isCleaning || store.isLoading"
                   class="text-sm bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-3 py-1 rounded-md hover:bg-yellow-200 dark:hover:bg-yellow-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   预览
@@ -298,7 +339,7 @@
               <template #actions>
                 <button
                   @click="previewWorkspaceChanges"
-                  :disabled="!store.systemStatus?.workspaceDirectoryExists"
+                  :disabled="!store.systemStatus?.workspaceDirectoryExists || store.isCleaning || store.isLoading"
                   class="text-sm bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-3 py-1 rounded-md hover:bg-red-200 dark:hover:bg-red-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   预览
@@ -318,16 +359,16 @@
               <div class="space-y-3">
                 <button
                   @click="startCleaning"
-                  :disabled="!store.canPerformClean || store.isHighRisk"
+                  :disabled="!store.canPerformClean || store.isHighRisk || store.isCleaning || store.isLoading"
                   class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-3 px-6 rounded-lg transition-colors disabled:cursor-not-allowed"
                 >
                   <span v-if="store.isLoading">准备中...</span>
-                  <span v-else>开始清理</span>
+                  <span v-else>开始清理并重启 VS Code</span>
                 </button>
 
                 <button
                   @click="previewAllChanges"
-                  :disabled="!store.canPerformClean"
+                  :disabled="!store.canPerformClean || store.isCleaning || store.isLoading"
                   class="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium py-2 px-6 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   预览所有更改
@@ -399,6 +440,32 @@
               <p class="text-blue-700 dark:text-blue-300 text-sm">
                 现在可以重新启动 VS Code，然后在 AugmentCode 插件中使用新的邮箱进行登录。
               </p>
+              
+              <!-- 显示最后生成的邮箱 -->
+              <div v-if="emailStore.lastGeneratedEmail" class="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium text-blue-800 dark:text-blue-200">已生成的邮箱</span>
+                </div>
+                <p class="mt-1 font-mono text-sm text-blue-700 dark:text-blue-300 break-all">
+                  {{ emailStore.lastGeneratedEmail.email }}
+                </p>
+                <p class="mt-1 text-xs text-green-600 dark:text-green-400">
+                  已自动复制到剪贴板
+                </p>
+              </div>
+              
+              <!-- 邮箱生成器链接 -->
+              <div v-if="!emailStore.canGenerate" class="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800">
+                <p class="text-sm text-blue-700 dark:text-blue-300">
+                  您尚未设置邮箱生成器。前往邮箱生成器页面进行设置，以便在清理后自动生成邮箱。
+                </p>
+                <router-link 
+                  to="/email" 
+                  class="mt-2 inline-block text-xs bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 px-2 py-1 rounded hover:bg-blue-300 dark:hover:bg-blue-700 transition-colors"
+                >
+                  前往邮箱生成器
+                </router-link>
+              </div>
             </div>
           </div>
         </div>
@@ -410,6 +477,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useAugmentCleanerStore } from '../stores/augmentCleaner'
+import { useEmailGeneratorStore } from '../stores/emailGenerator'
 import PathDisplay from '../components/PathDisplay.vue'
 import OperationCard from '../components/OperationCard.vue'
 import ProgressIndicator from '../components/ProgressIndicator.vue'
@@ -417,6 +485,7 @@ import StatusBadge from '../components/StatusBadge.vue'
 
 // 状态管理
 const store = useAugmentCleanerStore()
+const emailStore = useEmailGeneratorStore()
 
 // 计算属性
 const riskLevelText = computed(() => {
@@ -434,51 +503,113 @@ const refreshStatus = async () => {
   await store.assessRisk()
 }
 
+// 获取当前步骤的索引
+const getStepIndex = (step: string): number => {
+  const steps = ['preparing', 'backup', 'telemetry', 'database', 'workspace', 'finalizing', 'completed']
+  return steps.indexOf(step)
+}
+
+// 获取步骤描述
+const getStepDescription = (step: string): string => {
+  switch (step) {
+    case 'preparing':
+      return '准备清理环境'
+    case 'backup':
+      return '创建数据备份'
+    case 'telemetry':
+      return '修改遥测 ID'
+    case 'database':
+      return '清理数据库记录'
+    case 'workspace':
+      return '清理工作区存储'
+    case 'finalizing':
+      return '完成清理操作'
+    case 'completed':
+      return '清理完成，准备重启'
+    default:
+      return '处理中...'
+  }
+}
+
 const startCleaning = async () => {
   try {
+    // 设置加载状态
+    store.setLoading(true);
+    
     // 检查 VS Code 是否在运行
     const isVSCodeRunning = await store.checkVSCodeRunning()
     if (isVSCodeRunning) {
       const confirmed = await window.electronAPI.showMessageBox({
         type: 'warning',
-        title: '警告',
-        message: 'VS Code 正在运行',
-        detail: '为了确保操作成功，建议先完全退出 VS Code。是否继续？',
-        buttons: ['取消', '继续'],
-        defaultId: 0,
+        title: '准备清理',
+        message: '系统将自动处理 VS Code',
+        detail: '点击确认后，系统将自动关闭 VS Code 并执行清理。完成后会自动重启 VS Code，整个过程无需手动操作。',
+        buttons: ['取消', '确认并继续'],
+        defaultId: 1,
         cancelId: 0,
       })
 
       if (confirmed.response === 0) {
+        store.setLoading(false);
+        return
+      }
+      
+      // 用户确认后，准备关闭 VS Code
+      await store.closeVSCode()
+    } else {
+      // 如果 VS Code 未运行，仍需确认操作
+      const confirmed = await window.electronAPI.showMessageBox({
+        type: 'question',
+        title: '确认清理',
+        message: '确定要开始清理 AugmentCode 数据吗？',
+        detail: '此操作将修改遥测 ID、清理数据库记录和工作区文件。操作前会自动创建备份。',
+        buttons: ['取消', '开始清理'],
+        defaultId: 1,
+        cancelId: 0,
+      })
+
+      if (confirmed.response === 0) {
+        store.setLoading(false);
         return
       }
     }
 
-    // 确认操作
-    const confirmed = await window.electronAPI.showMessageBox({
-      type: 'question',
-      title: '确认清理',
-      message: '确定要开始清理 AugmentCode 数据吗？',
-      detail: '此操作将修改遥测 ID、清理数据库记录和工作区文件。操作前会自动创建备份。',
-      buttons: ['取消', '开始清理'],
-      defaultId: 1,
-      cancelId: 0,
-    })
-
-    if (confirmed.response === 1) {
-      await store.performFullClean()
-
-      // 显示完成消息
-      await window.electronAPI.showMessageBox({
-        type: 'info',
-        title: '清理完成',
-        message: '所有清理操作已成功完成！',
-        detail: '现在可以重新启动 VS Code 并使用新邮箱登录 AugmentCode 插件。',
-        buttons: ['确定'],
-      })
+    // 执行清理操作
+    await store.performFullClean()
+    
+    // 只有在用户已经配置了邮箱生成器的情况下才生成邮箱
+    let emailMessage = ''
+    if (emailStore.canGenerate) {
+      const generatedEmail = await emailStore.generateAndCopyEmail()
+      if (generatedEmail) {
+        emailMessage = `\n\n已自动生成新邮箱并复制到剪贴板: ${generatedEmail}`
+      }
     }
+
+    // 显示完成消息
+    await window.electronAPI.showMessageBox({
+      type: 'info',
+      title: '清理完成',
+      message: '所有清理操作已成功完成！',
+      detail: `VS Code 将在几秒钟后自动重新启动，无需手动操作。\n\n清理过程已创建备份，如果需要恢复数据，您可以随时返回此工具。${emailMessage}`,
+      buttons: ['确定'],
+    })
+    
+    // 重新启动 VS Code
+    await store.reopenVSCode()
   } catch (error) {
     console.error('清理操作失败:', error)
+    // 显示错误信息
+    await window.electronAPI.showMessageBox({
+      type: 'error',
+      title: '清理失败',
+      message: '清理操作失败',
+      detail: error instanceof Error ? error.message : '发生未知错误',
+      buttons: ['确定'],
+    })
+  } finally {
+    // 无论成功还是失败，都要取消加载状态
+    store.setLoading(false);
   }
 }
 
@@ -618,6 +749,9 @@ const formatFileSize = (bytes: number): string => {
 
 // 生命周期
 onMounted(async () => {
+  console.log('AugmentCleaner mounted')
   await store.initialize()
+  // 初始化邮箱生成器
+  emailStore.initializeStore()
 })
 </script>

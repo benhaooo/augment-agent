@@ -24,17 +24,17 @@ export class JsonModifierService {
    * 5. 更新机器 ID 文件中的新机器 ID
    * 6. 保存修改后的文件
    */
-  static async modifyTelemetryIds(): Promise<TelemetryModificationResult> {
-    const storagePath = await PathManager.getStoragePath()
+  static async modifyTelemetryIds(storagePath?: string): Promise<TelemetryModificationResult> {
+    const finalStoragePath = storagePath || await PathManager.getStoragePath()
     const machineIdPath = await PathManager.getMachineIdPath()
 
     // 检查 storage.json 文件是否存在
-    if (!(await FileBackup.fileExists(storagePath))) {
-      throw new Error(`Storage 文件未找到: ${storagePath}`)
+    if (!(await FileBackup.fileExists(finalStoragePath))) {
+      throw new Error(`Storage 文件未找到: ${finalStoragePath}`)
     }
 
     // 创建备份
-    const storageBackupPath = await FileBackup.createBackup(storagePath)
+    const storageBackupPath = await FileBackup.createBackup(finalStoragePath)
     let machineIdBackupPath: string | null = null
     
     if (await FileBackup.fileExists(machineIdPath)) {
@@ -43,7 +43,7 @@ export class JsonModifierService {
 
     try {
       // 读取当前 JSON 内容
-      const storageContent = await window.electronAPI.readFile(storagePath)
+      const storageContent = await window.electronAPI.readFile(finalStoragePath)
       const data = JSON.parse(storageContent)
 
       // 存储旧值
@@ -58,7 +58,7 @@ export class JsonModifierService {
       data['telemetry.devDeviceId'] = newDeviceId
 
       // 写入修改后的内容到 storage.json
-      await window.electronAPI.writeFile(storagePath, JSON.stringify(data, null, 4))
+      await window.electronAPI.writeFile(finalStoragePath, JSON.stringify(data, null, 4))
 
       // 写入新的机器 ID 到机器 ID 文件
       await window.electronAPI.writeFile(machineIdPath, newDeviceId)
@@ -74,7 +74,7 @@ export class JsonModifierService {
     } catch (error) {
       // 如果出错，尝试恢复备份
       try {
-        await window.electronAPI.copyFile(storageBackupPath, storagePath)
+        await window.electronAPI.copyFile(storageBackupPath, finalStoragePath)
         if (machineIdBackupPath) {
           await window.electronAPI.copyFile(machineIdBackupPath, machineIdPath)
         }

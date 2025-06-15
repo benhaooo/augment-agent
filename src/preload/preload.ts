@@ -28,6 +28,10 @@ export interface ElectronAPI {
   maximizeWindow: () => Promise<void>
   closeWindow: () => Promise<void>
   isWindowMaximized: () => Promise<boolean>
+  
+  // VSCode process controls
+  closeVSCode: () => Promise<boolean>
+  reopenVSCode: () => Promise<boolean>
 
   // File operations
   writeFile: (filePath: string, content: string) => Promise<{ success: boolean; error?: string }>
@@ -114,6 +118,10 @@ const electronAPI: ElectronAPI = {
   maximizeWindow: () => ipcRenderer.invoke('window:maximize'),
   closeWindow: () => ipcRenderer.invoke('window:close'),
   isWindowMaximized: () => ipcRenderer.invoke('window:isMaximized'),
+  
+  // VSCode process controls
+  closeVSCode: () => ipcRenderer.invoke('vscode:close'),
+  reopenVSCode: () => ipcRenderer.invoke('vscode:reopen'),
 
   // File operations
   writeFile: (filePath, content) => ipcRenderer.invoke('fs:writeFile', filePath, content),
@@ -130,7 +138,7 @@ const electronAPI: ElectronAPI = {
   previewAugmentRecords: (dbPath) => ipcRenderer.invoke('sqlite:previewAugmentRecords', dbPath),
 
   // Process operations
-  isVSCodeRunning: () => ipcRenderer.invoke('process:isVSCodeRunning'),
+  isVSCodeRunning: () => ipcRenderer.invoke('vscode:isRunning'),
 
   // Workspace operations
   getWorkspaceInfo: (workspacePath) => ipcRenderer.invoke('workspace:getInfo', workspacePath),

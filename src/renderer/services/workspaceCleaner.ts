@@ -25,17 +25,17 @@ export class WorkspaceCleanerService {
    * 2. 创建所有文件的 zip 备份
    * 3. 删除目录中的所有文件
    */
-  static async cleanWorkspaceStorage(): Promise<WorkspaceCleanResult> {
-    const workspacePath = await PathManager.getWorkspaceStoragePath()
+  static async cleanWorkspaceStorage(workspacePath?: string): Promise<WorkspaceCleanResult> {
+    const finalWorkspacePath = workspacePath || await PathManager.getWorkspaceStoragePath()
 
     // 检查工作区目录是否存在
-    if (!(await FileBackup.fileExists(workspacePath))) {
-      throw new Error(`工作区存储目录未找到: ${workspacePath}`)
+    if (!(await FileBackup.fileExists(finalWorkspacePath))) {
+      throw new Error(`工作区存储目录未找到: ${finalWorkspacePath}`)
     }
 
     try {
       // 通过 IPC 调用主进程的工作区清理操作
-      const result = await window.electronAPI.cleanWorkspaceStorage(workspacePath)
+      const result = await window.electronAPI.cleanWorkspaceStorage(finalWorkspacePath)
       
       return result
     } catch (error) {

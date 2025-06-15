@@ -17,20 +17,20 @@ export class SqliteModifierService {
    * 3. 打开数据库连接
    * 4. 删除键包含 'augment' 的记录
    */
-  static async cleanAugmentData(): Promise<DatabaseCleanResult> {
-    const dbPath = await PathManager.getDbPath()
+  static async cleanAugmentData(dbPath?: string): Promise<DatabaseCleanResult> {
+    const finalDbPath = dbPath || await PathManager.getDbPath()
 
     // 检查数据库文件是否存在
-    if (!(await FileBackup.fileExists(dbPath))) {
-      throw new Error(`数据库文件未找到: ${dbPath}`)
+    if (!(await FileBackup.fileExists(finalDbPath))) {
+      throw new Error(`数据库文件未找到: ${finalDbPath}`)
     }
 
     // 创建备份
-    const dbBackupPath = await FileBackup.createBackup(dbPath)
+    const dbBackupPath = await FileBackup.createBackup(finalDbPath)
 
     try {
       // 通过 IPC 调用主进程的数据库操作
-      const result = await window.electronAPI.cleanSqliteData(dbPath)
+      const result = await window.electronAPI.cleanSqliteData(finalDbPath)
       
       return {
         dbBackupPath,
@@ -39,7 +39,7 @@ export class SqliteModifierService {
     } catch (error) {
       // 如果出错，尝试恢复备份
       try {
-        await window.electronAPI.copyFile(dbBackupPath, dbPath)
+        await window.electronAPI.copyFile(dbBackupPath, finalDbPath)
       } catch (restoreError) {
         console.error('恢复数据库备份失败:', restoreError)
       }

@@ -28,6 +28,10 @@ export interface ElectronAPI {
   closeWindow: () => Promise<void>
   isWindowMaximized: () => Promise<boolean>
 
+  // VSCode process controls
+  closeVSCode: () => Promise<boolean>
+  reopenVSCode: () => Promise<boolean>
+
   // File operations
   writeFile: (filePath: string, content: string) => Promise<{ success: boolean; error?: string }>
   readFile: (filePath: string) => Promise<string>

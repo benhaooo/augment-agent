@@ -2,29 +2,9 @@
 
 export type ThemeMode = 'light' | 'dark' | 'auto'
 
-export interface NotificationSettings {
-  desktop: boolean
-  sound: boolean
-  autoHide: boolean
-}
-
-export interface PerformanceSettings {
-  hardwareAcceleration: boolean
-  backgroundProcessing: boolean
-  memoryLimit: number
-}
-
-export interface PrivacySettings {
-  analytics: boolean
-  crashReports: boolean
-}
-
 export interface AppSettings {
   theme: ThemeMode
   fontSize: number
-  notifications: NotificationSettings
-  performance: PerformanceSettings
-  privacy: PrivacySettings
 }
 
 export interface SystemInfo {
@@ -35,11 +15,7 @@ export interface SystemInfo {
   chromeVersion: string
 }
 
-export interface FeatureCardProps {
-  title: string
-  description: string
-  icon: string
-}
+
 
 export interface FormData {
   name: string

@@ -1,8 +1,8 @@
 import { join } from 'node:path'
 import process from 'node:process'
+import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { attachTitlebarToWindow, setupTitlebar } from 'custom-electron-titlebar/main'
 import { app, BrowserWindow, shell } from 'electron'
-import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { removeIpcHandlers, setupIpcHandlers } from './ipcHandlers'
 import { createMenu } from './menu'
 
@@ -22,6 +22,8 @@ class ElectronApp {
   }
 
   private init(): void {
+    app.disableHardwareAcceleration()
+
     app.whenReady().then(() => {
       // Set app user model id for windows
       electronApp.setAppUserModelId('com.electron')
@@ -66,8 +68,8 @@ class ElectronApp {
         contextIsolation: true,
         preload: join(__dirname, '../preload/index.cjs'),
         webSecurity: true,
-        allowRunningInsecureContent: false
-      }
+        allowRunningInsecureContent: false,
+      },
     })
     attachTitlebarToWindow(this.mainWindow)
 
@@ -82,8 +84,8 @@ class ElectronApp {
 
     // HMR for renderer base on electron-vite cli.
     // Load the remote URL for development or the local html file for production.
-    if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-      this.mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    if (is.dev && process.env.ELECTRON_RENDERER_URL) {
+      this.mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL)
       this.mainWindow.webContents.openDevTools()
     }
     else {

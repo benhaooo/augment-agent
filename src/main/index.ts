@@ -2,6 +2,7 @@ import { join } from 'node:path'
 import process from 'node:process'
 import { attachTitlebarToWindow, setupTitlebar } from 'custom-electron-titlebar/main'
 import { app, BrowserWindow, shell } from 'electron'
+import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { removeIpcHandlers, setupIpcHandlers } from './ipcHandlers'
 import { createMenu } from './menu'
 
@@ -15,15 +16,16 @@ setupTitlebar()
 
 class ElectronApp {
   private mainWindow: BrowserWindow | null = null
-  private isDev = !app.isPackaged
 
   constructor() {
     this.init()
   }
 
   private init(): void {
-    // This method will be called when Electron has finished initialization
     app.whenReady().then(() => {
+      // Set app user model id for windows
+      electronApp.setAppUserModelId('com.electron')
+
       this.createWindow()
       this.setupMenu()
       this.setupIPC()
@@ -44,14 +46,6 @@ class ElectronApp {
         app.quit()
       }
     })
-
-    // Security: Prevent new window creation
-    app.on('web-contents-created', (_, contents) => {
-      contents.setWindowOpenHandler(({ url }) => {
-        shell.openExternal(url)
-        return { action: 'deny' }
-      })
-    })
   }
 
   private createWindow(): void {
@@ -65,31 +59,36 @@ class ElectronApp {
       frame: false,
       titleBarStyle: 'hidden',
       titleBarOverlay: true,
+      ...(process.platform === 'linux' ? { icon: join(__dirname, '../../build/icon.png') } : {}),
       webPreferences: {
         sandbox: false,
         nodeIntegration: false,
         contextIsolation: true,
-        preload: join(__dirname, '../preload/preload.cjs'),
+        preload: join(__dirname, '../preload/index.cjs'),
         webSecurity: true,
-        allowRunningInsecureContent: false,
-      },
+        allowRunningInsecureContent: false
+      }
     })
     attachTitlebarToWindow(this.mainWindow)
 
-    // Load the app
-    if (this.isDev) {
-      this.mainWindow.loadURL('http://localhost:5173')
-      // Open DevTools in development
+    this.mainWindow.on('ready-to-show', () => {
+      this.mainWindow?.show()
+    })
+
+    this.mainWindow.webContents.setWindowOpenHandler((details) => {
+      shell.openExternal(details.url)
+      return { action: 'deny' }
+    })
+
+    // HMR for renderer base on electron-vite cli.
+    // Load the remote URL for development or the local html file for production.
+    if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+      this.mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
       this.mainWindow.webContents.openDevTools()
     }
     else {
       this.mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
     }
-
-    // Show window when ready to prevent visual flash
-    this.mainWindow.once('ready-to-show', () => {
-      this.mainWindow?.show()
-    })
 
     // Handle window closed
     this.mainWindow.on('closed', () => {

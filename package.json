@@ -13,52 +13,42 @@
     "typescript",
     "tailwindcss"
   ],
-  "main": "dist/main/main.cjs",
+  "main": "out/main/index.cjs",
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
-    "dev": "npm run build:main && npm run build:preload && concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
-    "dev:vite": "vite",
-    "dev:electron": "wait-on tcp:5173 && electron .",
-    "build": "npm run build:renderer && npm run build:main && npm run build:preload",
-    "build:renderer": "vite build",
-    "build:main": "vite build --config build/vite.config.main.ts",
-    "build:preload": "vite build --config build/vite.config.preload.ts",
-    "build:all": "npm run build && electron-builder",
-    "build:win": "npm run build && electron-builder --win",
-    "build:mac": "npm run build && electron-builder --mac",
-    "build:linux": "npm run build && electron-builder --linux",
-    "preview": "vite preview",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "type-check": "tsc --noEmit",
+    "dev": "electron-vite dev",
+    "build": "electron-vite build && electron-builder",
+    "build:win": "electron-vite build && electron-builder --win",
+    "build:mac": "electron-vite build && electron-builder --mac",
+    "build:linux": "electron-vite build && electron-builder --linux",
     "postinstall": "electron-builder install-app-deps",
+    "type-check": "vue-tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "better-sqlite3": "^9.2.2",
-    "custom-electron-titlebar": "^4.2.8",
-    "pinia": "^3.0.3",
-    "vue": "^3.3.8",
-    "vue-router": "^4.2.5"
+    "better-sqlite3": "11.10.0"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.14.1",
+    "@electron-toolkit/utils": "^4.0.0",
     "@types/node": "^20.10.0",
     "@vitejs/plugin-vue": "^4.5.0",
-    "@vue/tsconfig": "^0.4.0",
     "autoprefixer": "^10.4.16",
-    "concurrently": "^8.2.2",
+    "custom-electron-titlebar": "^4.2.8",
     "electron": "^27.1.0",
     "electron-builder": "^24.6.4",
+    "electron-vite": "^3.1.0",
     "eslint": "^9.28.0",
+    "pinia": "^3.0.3",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.3.6",
     "typescript": "^5.3.2",
     "vite": "^5.0.0",
-    "vue-tsc": "^1.8.22",
-    "wait-on": "^7.2.0"
+    "vue": "^3.3.8",
+    "vue-router": "^4.2.5",
+    "vue-tsc": "^1.8.22"
   }
 }

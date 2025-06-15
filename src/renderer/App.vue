@@ -1,7 +1,72 @@
+<script setup lang="ts">
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import AboutModal from '@/components/AboutModal.vue'
+import { useSettingsStore } from '@/stores/settings'
+
+const route = useRoute()
+const settingsStore = useSettingsStore()
+const appVersion = ref('1.0.0')
+const platform = ref('unknown')
+const showAboutModal = ref(false)
+
+const titlebarHeight = computed(() => {
+  // Use 28px for macOS and 30px for other platforms
+  return platform.value === 'darwin' ? '28px' : '30px'
+})
+
+const mainPaddingTop = computed(() => {
+  // The navbar height is h-16 which is 4rem (64px)
+  const navbarHeight = 64
+  const titlebarHeightValue = platform.value === 'darwin' ? 28 : 30
+  return `${titlebarHeightValue + navbarHeight}px`
+})
+
+const navigationRoutes = [
+  { path: '/', name: 'AugmentCode 清理器' },
+  { path: '/email', name: '随机邮箱生成器' },
+  { path: '/settings', name: 'Settings' },
+]
+
+function isActiveRoute(path: string): boolean {
+  return route.path === path
+}
+
+function handleShowAbout(): void {
+  showAboutModal.value = true
+}
+
+onMounted(async () => {
+  // Initialize settings - this will load and apply saved theme and font settings
+  await settingsStore.initializeSettings()
+
+  // Get app information
+  if (window.electronAPI) {
+    try {
+      appVersion.value = await window.electronAPI.getVersion()
+      platform.value = await window.electronAPI.getPlatform()
+    }
+    catch (error) {
+      console.error('Failed to get app info:', error)
+    }
+
+    // Listen for about dialog
+    window.electronAPI.onShowAbout(handleShowAbout)
+  }
+})
+
+onUnmounted(() => {
+  if (window.electronAPI) {
+    window.electronAPI.removeAllListeners('show-about')
+  }
+})
+</script>
+
 <template>
   <div id="app" class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
     <nav
-      class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200"
+      class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200 fixed w-full z-50"
+      :style="{ top: titlebarHeight }"
     >
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -32,7 +97,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="flex-1">
+    <main class="flex-1" :style="{ paddingTop: mainPaddingTop }">
       <router-view />
     </main>
 
@@ -40,58 +105,3 @@
     <AboutModal v-if="showAboutModal" @close="showAboutModal = false" />
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
-import AboutModal from '@/components/AboutModal.vue'
-import { useSettingsStore } from '@/stores/settings'
-
-const route = useRoute()
-const settingsStore = useSettingsStore()
-const showTitleBar = ref(false)
-const appVersion = ref('1.0.0')
-const platform = ref('unknown')
-const showAboutModal = ref(false)
-
-const navigationRoutes = [
-  { path: '/', name: 'AugmentCode 清理器' },
-  { path: '/email', name: '随机邮箱生成器' },
-  { path: '/settings', name: 'Settings' },
-]
-
-const isActiveRoute = (path: string): boolean => {
-  return route.path === path
-}
-
-const handleShowAbout = () => {
-  showAboutModal.value = true
-}
-
-onMounted(async () => {
-  // Initialize settings - this will load and apply saved theme and font settings
-  await settingsStore.initializeSettings()
-
-  // Get app information
-  if (window.electronAPI) {
-    try {
-      appVersion.value = await window.electronAPI.getVersion()
-      platform.value = await window.electronAPI.getPlatform()
-    } catch (error) {
-      console.error('Failed to get app info:', error)
-    }
-
-    // Listen for about dialog
-    window.electronAPI.onShowAbout(handleShowAbout)
-  }
-
-  // Show title bar on Windows/Linux if needed
-  showTitleBar.value = platform.value !== 'darwin'
-})
-
-onUnmounted(() => {
-  if (window.electronAPI) {
-    window.electronAPI.removeAllListeners('show-about')
-  }
-})
-</script>

@@ -34,25 +34,20 @@
 
 ```
 electron-vue3-starter/
+├── out/                      # 构建输出目录
+├── release/                  # 打包输出目录
 ├── src/
 │   ├── main/                 # Electron 主进程
-│   │   ├── main.ts          # 主进程入口点
-│   │   └── menu.ts          # 应用菜单配置
-│   ├── preload/             # 预加载脚本
-│   │   └── preload.ts       # 主进程和渲染进程之间的 IPC 桥接
-│   └── renderer/            # Vue 3 渲染进程
-│       ├── components/      # 可复用的 Vue 组件
-│       ├── composables/     # Vue 3 组合式函数
-│       ├── views/           # 页面组件
-│       ├── types/           # TypeScript 类型定义
-│       ├── router/          # Vue Router 配置
-│       ├── App.vue          # 根 Vue 组件
-│       ├── main.ts          # 渲染进程入口点
-│       └── style.css        # 全局样式
-├── build/                   # 构建配置
-├── public/                  # 静态资源
-├── dist/                    # 构建输出
-└── 配置文件
+│   │   └── index.ts          # 主进程入口点
+│   ├── preload/              # 预加载脚本
+│   │   └── index.ts          # 主进程和渲染进程之间的 IPC 桥接
+│   └── renderer/             # Vue 3 渲染进程
+│       ├── components/       # 可复用的 Vue 组件
+│       ├── router/           # Vue Router 配置
+│       └── index.ts          # 渲染进程入口点
+├── index.html                # 渲染进程的 HTML 入口
+├── electron.vite.config.ts   # Electron Vite 配置文件
+└── ...                       # 其他配置文件
 ```
 
 ## 🛠️ 安装与设置
@@ -96,30 +91,13 @@ npm run dev
 
 ### 可用脚本
 
-#### 开发
-
 - `npm run dev` - 启动带热重载的开发服务器
-- `npm run dev:vite` - 仅启动 Vite 开发服务器
-- `npm run dev:electron` - 仅启动 Electron（需要 Vite 服务器运行）
-
-#### 构建
-
-- `npm run build` - 构建所有进程（渲染器、主进程、预加载）
-- `npm run build:renderer` - 仅构建渲染进程
-- `npm run build:main` - 仅构建主进程
-- `npm run build:preload` - 仅构建预加载脚本
-
-#### 打包
-
-- `npm run build:all` - 为当前平台构建和打包
+- `npm run build` - 为当前平台构建和打包应用
 - `npm run build:win` - 为 Windows 构建和打包
 - `npm run build:mac` - 为 macOS 构建和打包
 - `npm run build:linux` - 为 Linux 构建和打包
-
-#### 代码质量
-
-- `npm run lint` - 运行带自动修复的 ESLint
-- `npm run format` - 使用 Prettier 格式化代码
+- `npm run lint` - 运行 ESLint 检查代码
+- `npm run lint:fix` - 运行 ESLint 并自动修复问题
 - `npm run type-check` - 运行 TypeScript 类型检查
 
 ## 🏗️ 生产构建
@@ -127,16 +105,14 @@ npm run dev
 ### 构建应用
 
 ```bash
+# 这会根据你的开发环境为相应平台构建应用
 npm run build
 ```
 
 ### 打包分发
 
 ```bash
-# 为当前平台
-npm run build:all
-
-# 为特定平台
+# 为特定平台构建
 npm run build:win    # Windows
 npm run build:mac    # macOS
 npm run build:linux  # Linux
@@ -148,23 +124,15 @@ npm run build:linux  # Linux
 
 ### Electron Builder
 
-在 `electron-builder.json` 中配置打包选项：
-
-- 应用元数据
-- 平台特定设置
-- 文件关联
-- 自动更新配置
+在 `electron-builder.json` 中配置打包选项。
 
 ### Vite 配置
 
-- `vite.config.ts` - 渲染进程配置
-- `build/vite.config.main.ts` - 主进程配置
-- `build/vite.config.preload.ts` - 预加载脚本配置
+在 `electron.vite.config.ts` 中配置主进程、预加载脚本和渲染进程的 Vite 选项。
 
 ### TypeScript 配置
 
-- `tsconfig.json` - 渲染进程 TypeScript 配置
-- `tsconfig.node.json` - 主进程 TypeScript 配置
+在根目录的 `tsconfig.json` 中配置整个项目的 TypeScript 选项，它包含了主进程、预加载和渲染进程的配置。
 
 ## 🎨 自定义
 
@@ -182,8 +150,8 @@ npm run build:linux  # Linux
 
 ### IPC 通信
 
-1. 在 `src/main/main.ts` 中添加新的 IPC 处理程序
-2. 在 `src/preload/preload.ts` 中暴露方法
+1. 在 `src/main/ipcHandlers.ts` 中添加新的 IPC 处理程序 (或你选择的其他文件)
+2. 在 `src/preload/index.ts` 中暴露方法
 3. 在 `src/renderer/types/electron.d.ts` 中更新 TypeScript 定义
 
 ## 📚 包含的示例
@@ -263,9 +231,8 @@ npm run build:linux  # Linux
 如果构建过程中遇到问题：
 
 1. 确保 Node.js 版本 >= 18.0.0
-2. 清除缓存：`npm run clean`
-3. 重新安装依赖：`npm ci`
-4. 逐步构建：先 `npm run build:renderer`，然后 `npm run build:main` 等
+2. 删除 `out` 和 `release` 目录，以及 `node_modules` 和 `package-lock.json`
+3. 重新安装依赖：`npm install`
 
 ### 平台特定问题
 

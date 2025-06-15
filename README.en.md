@@ -40,25 +40,20 @@ A modern, comprehensive Electron application template built with the latest web 
 
 ```
 electron-vue3-starter/
+├── out/                      # Build output
+├── release/                  # Packaged app output
 ├── src/
-│   ├── main/                 # Electron main process
-│   │   ├── main.ts          # Main process entry point
-│   │   └── menu.ts          # Application menu configuration
-│   ├── preload/             # Preload scripts
-│   │   └── preload.ts       # IPC bridge between main and renderer processes
-│   └── renderer/            # Vue 3 renderer process
-│       ├── components/      # Reusable Vue components
-│       ├── composables/     # Vue 3 composition functions
-│       ├── views/           # Page components
-│       ├── types/           # TypeScript type definitions
-│       ├── router/          # Vue Router configuration
-│       ├── App.vue          # Root Vue component
-│       ├── main.ts          # Renderer process entry point
-│       └── style.css        # Global styles
-├── build/                   # Build configuration
-├── public/                  # Static assets
-├── dist/                    # Build output
-└── Configuration files
+│   ├── main/                 # Electron Main Process
+│   │   └── index.ts          # Main process entry point
+│   ├── preload/              # Preload Scripts
+│   │   └── index.ts          # Bridge between main and renderer
+│   └── renderer/             # Vue 3 Renderer Process
+│       ├── components/       # Vue Components
+│       ├── router/           # Router config
+│       └── index.ts          # Renderer process entry point
+├── index.html                # Renderer HTML entry
+├── electron.vite.config.ts   # Electron Vite config
+└── ...                       # Other config files
 ```
 
 ## 🛠️ Installation & Setup
@@ -102,30 +97,13 @@ This command will:
 
 ### Available Scripts
 
-#### Development
-
 - `npm run dev` - Start the development server with hot-reload
-- `npm run dev:vite` - Start only the Vite development server
-- `npm run dev:electron` - Start only Electron (requires Vite server running)
-
-#### Building
-
-- `npm run build` - Build all processes (renderer, main, preload)
-- `npm run build:renderer` - Build only the renderer process
-- `npm run build:main` - Build only the main process
-- `npm run build:preload` - Build only the preload script
-
-#### Packaging
-
-- `npm run build:all` - Build and package for the current platform
+- `npm run build` - Build and package the application for the current platform
 - `npm run build:win` - Build and package for Windows
 - `npm run build:mac` - Build and package for macOS
 - `npm run build:linux` - Build and package for Linux
-
-#### Code Quality
-
-- `npm run lint` - Run ESLint with auto-fix
-- `npm run format` - Format code with Prettier
+- `npm run lint` - Lint your code with ESLint
+- `npm run lint:fix` - Lint your code and fix issues automatically
 - `npm run type-check` - Run TypeScript type checking
 
 ## 🏗️ Production Build
@@ -133,15 +111,13 @@ This command will:
 ### Build the application
 
 ```bash
+# This will build the app for your current development platform
 npm run build
 ```
 
 ### Package for distribution
 
 ```bash
-# For current platform
-npm run build:all
-
 # For specific platforms
 npm run build:win    # Windows
 npm run build:mac    # macOS
@@ -154,23 +130,15 @@ The built application will be available in the `release/` directory.
 
 ### Electron Builder
 
-Configure packaging options in `electron-builder.json`:
-
-- Application metadata
-- Platform-specific settings
-- File associations
-- Auto-update configuration
+Configure packaging options in `electron-builder.json`.
 
 ### Vite Configuration
 
-- `vite.config.ts` - Renderer process configuration
-- `build/vite.config.main.ts` - Main process configuration
-- `build/vite.config.preload.ts` - Preload script configuration
+Configure Vite options for the main, preload, and renderer processes in `electron.vite.config.ts`.
 
 ### TypeScript Configuration
 
-- `tsconfig.json` - Renderer process TypeScript configuration
-- `tsconfig.node.json` - Main process TypeScript configuration
+Configure TypeScript options for the entire project in the root `tsconfig.json`, which covers main, preload, and renderer processes.
 
 ## 🎨 Customization
 
@@ -188,11 +156,11 @@ Configure packaging options in `electron-builder.json`:
 
 ### IPC Communication
 
-1. Add new IPC handlers in `src/main/main.ts`
-2. Expose methods in `src/preload/preload.ts`
+1. Add new IPC handlers in `src/main/ipcHandlers.ts` (or your chosen file)
+2. Expose methods in `src/preload/index.ts`
 3. Update TypeScript definitions in `src/renderer/types/electron.d.ts`
 
-## 📚 Included Examples
+## �� Included Examples
 
 ### Vue 3 Composition API
 
@@ -269,9 +237,8 @@ If you encounter TypeScript type errors, ensure:
 If you encounter issues during the build process:
 
 1. Ensure Node.js version >= 18.0.0
-2. Clear cache: `npm run clean`
-3. Reinstall dependencies: `npm ci`
-4. Build incrementally: first `npm run build:renderer`, then `npm run build:main`, etc.
+2. Delete the `out`, `release`, `node_modules`, and `package-lock.json`
+3. Reinstall dependencies: `npm install`
 
 ### Platform-specific Issues
 

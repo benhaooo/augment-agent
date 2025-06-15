@@ -99,45 +99,77 @@
       </div>
 
       <!-- 全屏加载遮罩 -->
-      <div v-if="store.isCleaning || store.isLoading" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full text-center">
-          <div class="mb-4">
-            <svg class="animate-spin h-10 w-10 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </div>
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
-            {{ store.cleaningProgress?.message || '处理中...' }}
-          </h3>
-          <div v-if="store.cleaningProgress" class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-2">
-            <div class="bg-blue-600 h-2.5 rounded-full" :style="{ width: `${store.cleaningProgress.percentage}%` }"></div>
-          </div>
-          <div v-if="store.cleaningProgress" class="mb-4 text-xs text-gray-500 dark:text-gray-400 text-right">
-            {{ store.cleaningProgress.percentage }}%
-          </div>
-          <div v-if="store.cleaningProgress" class="mb-4">
-            <div class="grid grid-cols-5 gap-1">
-              <div 
-                v-for="(step, index) in ['准备', '备份', '遥测', '数据库', '工作区']" 
-                :key="index"
-                class="h-1 rounded-full"
-                :class="[
-                  getStepIndex(store.cleaningProgress.step) >= index 
-                    ? 'bg-blue-500' 
-                    : 'bg-gray-200 dark:bg-gray-700'
-                ]"
+      <transition name="fade">
+        <div
+          v-if="store.isCleaning || store.isLoading"
+          class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center"
+        >
+          <div
+            class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full text-center"
+          >
+            <div class="mb-4">
+              <svg
+                class="animate-spin h-10 w-10 text-blue-500 mx-auto"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              {{ store.cleaningProgress?.message || '处理中...' }}
+            </h3>
+            <div
+              v-if="store.cleaningProgress"
+              class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-2"
+            >
+              <div
+                class="bg-blue-600 h-2.5 rounded-full"
+                :style="{ width: `${store.cleaningProgress.percentage}%` }"
               ></div>
             </div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {{ getStepDescription(store.cleaningProgress.step) }}
+            <div
+              v-if="store.cleaningProgress"
+              class="mb-4 text-xs text-gray-500 dark:text-gray-400 text-right"
+            >
+              {{ store.cleaningProgress.percentage }}%
             </div>
+            <div v-if="store.cleaningProgress" class="mb-4">
+              <div class="grid grid-cols-5 gap-1">
+                <div
+                  v-for="(step, index) in ['准备', '备份', '遥测', '数据库', '工作区']"
+                  :key="index"
+                  class="h-1 rounded-full"
+                  :class="[
+                    getStepIndex(store.cleaningProgress.step) >= index
+                      ? 'bg-blue-500'
+                      : 'bg-gray-200 dark:bg-gray-700',
+                  ]"
+                ></div>
+              </div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {{ getStepDescription(store.cleaningProgress.step) }}
+              </div>
+            </div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+              请勿关闭此窗口，操作完成后将自动继续
+            </p>
           </div>
-          <p class="text-sm text-gray-500 dark:text-gray-400">
-            请勿关闭此窗口，操作完成后将自动继续
-          </p>
         </div>
-      </div>
+      </transition>
 
       <!-- 主要内容区域 -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -749,9 +781,20 @@ const formatFileSize = (bytes: number): string => {
 
 // 生命周期
 onMounted(async () => {
-  console.log('AugmentCleaner mounted')
   await store.initialize()
   // 初始化邮箱生成器
   emailStore.initializeStore()
 })
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

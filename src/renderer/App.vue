@@ -98,7 +98,11 @@ onUnmounted(() => {
 
     <!-- Main Content -->
     <main class="flex-1" :style="{ paddingTop: mainPaddingTop }">
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <keep-alive>
+          <component :is="Component" />
+        </keep-alive>
+      </router-view>
     </main>
 
     <!-- About Modal -->

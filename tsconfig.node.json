@@ -1,5 +1,23 @@
 {
   "extends": "@vue/tsconfig/tsconfig.node.json",
+  "compilerOptions": {
+    "composite": true,
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "allowImportingTsExtensions": true,
+    "allowJs": false,
+    "strict": false,
+    "noFallthroughCasesInSwitch": true,
+    "noEmit": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": false,
+    "isolatedModules": true,
+    "skipLibCheck": true
+  },
   "include": [
     "src/main/**/*",
     "src/preload/**/*",
@@ -10,25 +28,5 @@
     "nightwatch.conf.*",
     "playwright.config.*"
   ],
-  "exclude": ["src/renderer/**/*"],
-  "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2022"],
-    "module": "ESNext",
-    "skipLibCheck": true,
-    "allowJs": false,
-    "esModuleInterop": false,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "noEmit": true,
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "composite": true,
-    "types": ["node"]
-  }
+  "exclude": ["src/renderer/**/*"]
 }

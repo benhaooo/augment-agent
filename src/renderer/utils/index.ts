@@ -7,7 +7,7 @@
  */
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
-  wait: number
+  wait: number,
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout | null = null
 
@@ -24,7 +24,7 @@ export function debounce<T extends (...args: any[]) => any>(
  */
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
-  limit: number
+  limit: number,
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean
 
@@ -49,7 +49,7 @@ export function deepClone<T>(obj: T): T {
     return new Date(obj.getTime()) as T
   }
 
-  if (obj instanceof Array) {
+  if (Array.isArray(obj)) {
     return obj.map(item => deepClone(item)) as T
   }
 
@@ -93,13 +93,14 @@ export function isEmpty(value: any): boolean {
  * Format file size in bytes to human readable format
  */
 export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 Bytes'
+  if (bytes === 0)
+    return '0 Bytes'
 
   const k = 1024
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
 
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`
 }
 
 /**
@@ -120,7 +121,7 @@ export function generateId(length: number = 8): string {
  * Validate email format
  */
 export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  const emailRegex = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
   return emailRegex.test(email)
 }
 
@@ -128,7 +129,8 @@ export function isValidEmail(email: string): boolean {
  * Capitalize first letter of a string
  */
 export function capitalize(str: string): string {
-  if (!str) return str
+  if (!str)
+    return str
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
 }
 
@@ -159,21 +161,22 @@ export function sleep(ms: number): Promise<void> {
 export async function retry<T>(
   fn: () => Promise<T>,
   maxAttempts: number = 3,
-  baseDelay: number = 1000
+  baseDelay: number = 1000,
 ): Promise<T> {
   let lastError: Error
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       return await fn()
-    } catch (error) {
+    }
+    catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error))
 
       if (attempt === maxAttempts) {
         throw lastError
       }
 
-      const delay = baseDelay * Math.pow(2, attempt - 1)
+      const delay = baseDelay * 2 ** (attempt - 1)
       await sleep(delay)
     }
   }

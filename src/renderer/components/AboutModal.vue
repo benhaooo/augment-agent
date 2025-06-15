@@ -129,7 +129,8 @@ onMounted(async () => {
       electronVersion.value = versions.electron
       nodeVersion.value = versions.node
       chromeVersion.value = versions.chrome
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to get app info:', error)
       // 设置默认值
       electronVersion.value = 'N/A'
@@ -139,19 +140,21 @@ onMounted(async () => {
   }
 })
 
-const openGitHub = async () => {
+async function openGitHub() {
   const githubUrl = 'https://github.com/benhaooo'
 
   if (window.electronAPI) {
     try {
       // 通过 Electron 打开外部链接
       await window.electronAPI.openExternal(githubUrl)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to open GitHub link:', error)
       // 降级方案：在浏览器中打开
       window.open(githubUrl, '_blank')
     }
-  } else {
+  }
+  else {
     // 如果不在 Electron 环境中，直接在浏览器中打开
     window.open(githubUrl, '_blank')
   }

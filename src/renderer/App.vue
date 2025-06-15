@@ -1,22 +1,5 @@
 <template>
   <div id="app" class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-    <!-- Title Bar (for custom window controls if needed) -->
-    <div
-      v-if="showTitleBar"
-      class="title-bar bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-8 flex items-center justify-between px-4"
-    >
-      <div class="flex items-center space-x-2">
-        <div class="w-3 h-3 rounded-full bg-red-500"></div>
-        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-        <div class="w-3 h-3 rounded-full bg-green-500"></div>
-      </div>
-      <div class="title-bar-text text-sm font-medium text-gray-600 dark:text-gray-300">
-        {{ appTitle }}
-      </div>
-      <div class="w-16"></div>
-    </div>
-
-    <!-- Navigation -->
     <nav
       class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200"
     >
@@ -67,7 +50,6 @@ import { useSettingsStore } from '@/stores/settings'
 const route = useRoute()
 const settingsStore = useSettingsStore()
 const showTitleBar = ref(false)
-const appTitle = ref('Electron Vue3 Starter')
 const appVersion = ref('1.0.0')
 const platform = ref('unknown')
 const showAboutModal = ref(false)
@@ -113,14 +95,3 @@ onUnmounted(() => {
   }
 })
 </script>
-
-<style scoped>
-.title-bar {
-  -webkit-app-region: drag;
-  user-select: none;
-}
-
-.title-bar > * {
-  -webkit-app-region: no-drag;
-}
-</style>

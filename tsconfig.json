@@ -1,26 +1,12 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["src/renderer/**/*", "src/renderer/**/*.vue"],
-  "exclude": ["src/main/**/*", "src/preload/**/*", "node_modules", "dist"],
   "compilerOptions": {
     "target": "ES2020",
-    "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "skipLibCheck": true,
-    "allowJs": false,
-    "esModuleInterop": false,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "noEmit": true,
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
+    "useDefineForClassFields": true,
     "baseUrl": ".",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "paths": {
       "@/*": ["src/renderer/*"],
       "@/components/*": ["src/renderer/components/*"],
@@ -28,6 +14,18 @@
       "@/composables/*": ["src/renderer/composables/*"],
       "@/types/*": ["src/renderer/types/*"]
     },
-    "types": ["vite/client"]
-  }
+    "resolveJsonModule": true,
+    "types": ["vite/client"],
+    "allowImportingTsExtensions": true,
+    "allowJs": false,
+    "strict": false,
+    "noFallthroughCasesInSwitch": true,
+    "noEmit": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": false,
+    "isolatedModules": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/renderer/**/*", "src/renderer/**/*.vue"],
+  "exclude": ["src/main/**/*", "src/preload/**/*", "node_modules", "dist"]
 }

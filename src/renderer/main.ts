@@ -1,6 +1,6 @@
+import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
-import { createPinia } from 'pinia'
 import App from './App.vue'
 import { routes } from './router'
 import './style.css'

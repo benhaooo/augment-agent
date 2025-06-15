@@ -1,3 +1,4 @@
+import { Titlebar, TitlebarColor } from 'custom-electron-titlebar'
 import { contextBridge, ipcRenderer } from 'electron'
 
 // Define the API interface
@@ -28,6 +29,9 @@ export interface ElectronAPI {
   maximizeWindow: () => Promise<void>
   closeWindow: () => Promise<void>
   isWindowMaximized: () => Promise<boolean>
+
+  // Theme management
+  updateTheme: (theme: string) => Promise<void>
   
   // VSCode process controls
   closeVSCode: () => Promise<boolean>
@@ -118,6 +122,9 @@ const electronAPI: ElectronAPI = {
   maximizeWindow: () => ipcRenderer.invoke('window:maximize'),
   closeWindow: () => ipcRenderer.invoke('window:close'),
   isWindowMaximized: () => ipcRenderer.invoke('window:isMaximized'),
+
+  // Theme management
+  updateTheme: (theme: string) => ipcRenderer.invoke('theme:update', theme),
   
   // VSCode process controls
   closeVSCode: () => ipcRenderer.invoke('vscode:close'),
@@ -151,13 +158,48 @@ const electronAPI: ElectronAPI = {
   openExternal: url => ipcRenderer.invoke('shell:openExternal', url),
 
   // Event listeners
-  onShowAbout: callback => {
+  onShowAbout: (callback) => {
     ipcRenderer.on('show-about', callback)
   },
-  removeAllListeners: channel => {
+  removeAllListeners: (channel) => {
     ipcRenderer.removeAllListeners(channel)
   },
 }
+
+window.addEventListener('DOMContentLoaded', () => {
+  // 初始化时根据document的类来判断当前主题
+  const isDarkTheme = document.documentElement.classList.contains('dark')
+
+  // 创建带有主题颜色的Titlebar
+  const titlebar = new Titlebar({
+    backgroundColor: isDarkTheme
+      ? TitlebarColor.fromHex('#1f2937')
+      : TitlebarColor.fromHex('#ffffff'),
+    unfocusEffect: true,
+  })
+
+  // 监听主题变化
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (
+        mutation.type === 'attributes'
+        && mutation.attributeName === 'class'
+      ) {
+        const isDark = document.documentElement.classList.contains('dark')
+        // 根据当前主题更新titlebar背景色
+        if (isDark) {
+          titlebar.updateBackground(TitlebarColor.fromHex('#1f2937'))
+        }
+        else {
+          titlebar.updateBackground(TitlebarColor.fromHex('#ffffff'))
+        }
+      }
+    })
+  })
+
+  // 观察html元素的class变化，因为主题是通过添加/移除dark类来实现的
+  observer.observe(document.documentElement, { attributes: true })
+})
 
 // Expose the API to the renderer process
 contextBridge.exposeInMainWorld('electronAPI', electronAPI)

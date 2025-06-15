@@ -1,10 +1,11 @@
-import { ipcMain, app, dialog, shell, BrowserWindow } from 'electron'
-import { writeFile, readFile, copyFile, access, constants, stat, readdir } from 'fs/promises'
-import { join } from 'path'
-import { homedir } from 'os'
+import type { BrowserWindow } from 'electron'
+import { exec } from 'node:child_process'
+import { access, constants, copyFile, readdir, readFile, stat, writeFile } from 'node:fs/promises'
+import { homedir } from 'node:os'
+import { join } from 'node:path'
+import { promisify } from 'node:util'
 import Database from 'better-sqlite3'
-import { exec } from 'child_process'
-import { promisify } from 'util'
+import { app, dialog, ipcMain, shell } from 'electron'
 
 const execAsync = promisify(exec)
 
@@ -110,10 +111,7 @@ class MainPathManager {
 /**
  * Helper function for scanning directories recursively
  */
-const scanDirectory = async (
-  dirPath: string,
-  counters: { totalFiles: number; totalDirectories: number; totalSize: number }
-) => {
+async function scanDirectory(dirPath: string, counters: { totalFiles: number, totalDirectories: number, totalSize: number }) {
   const items = await readdir(dirPath, { withFileTypes: true })
 
   for (const item of items) {
@@ -122,7 +120,8 @@ const scanDirectory = async (
     if (item.isDirectory()) {
       counters.totalDirectories++
       await scanDirectory(fullPath, counters)
-    } else if (item.isFile()) {
+    }
+    else if (item.isFile()) {
       counters.totalFiles++
       const fileStats = await stat(fullPath)
       counters.totalSize += fileStats.size
@@ -133,12 +132,13 @@ const scanDirectory = async (
 /**
  * Helper function for counting files recursively
  */
-const countFiles = async (dirPath: string, counter: { totalFiles: number }) => {
+async function countFiles(dirPath: string, counter: { totalFiles: number }) {
   const items = await readdir(dirPath, { withFileTypes: true })
   for (const item of items) {
     if (item.isFile()) {
       counter.totalFiles++
-    } else if (item.isDirectory()) {
+    }
+    else if (item.isDirectory()) {
       await countFiles(join(dirPath, item.name), counter)
     }
   }
@@ -172,19 +172,22 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
 
   // Dialog handlers
   ipcMain.handle('dialog:showMessageBox', async (_, options) => {
-    if (!mainWindow) return
+    if (!mainWindow)
+      return
     const result = await dialog.showMessageBox(mainWindow, options)
     return result
   })
 
   ipcMain.handle('dialog:showOpenDialog', async (_, options) => {
-    if (!mainWindow) return
+    if (!mainWindow)
+      return
     const result = await dialog.showOpenDialog(mainWindow, options)
     return result
   })
 
   ipcMain.handle('dialog:showSaveDialog', async (_, options) => {
-    if (!mainWindow) return
+    if (!mainWindow)
+      return
     const result = await dialog.showSaveDialog(mainWindow, options)
     return result
   })
@@ -197,7 +200,8 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
   ipcMain.handle('window:maximize', () => {
     if (mainWindow?.isMaximized()) {
       mainWindow.unmaximize()
-    } else {
+    }
+    else {
       mainWindow?.maximize()
     }
   })
@@ -210,12 +214,46 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
     return mainWindow?.isMaximized() ?? false
   })
 
+  // 窗口状态监听
+  if (mainWindow) {
+    // 监听窗口最大化状态变化
+    mainWindow.on('maximize', () => {
+      mainWindow?.webContents.send('window:maximized', true)
+    })
+
+    mainWindow.on('unmaximize', () => {
+      mainWindow?.webContents.send('window:maximized', false)
+    })
+
+    // 监听窗口焦点变化
+    mainWindow.on('focus', () => {
+      mainWindow?.webContents.send('window:focus', true)
+    })
+
+    mainWindow.on('blur', () => {
+      mainWindow?.webContents.send('window:focus', false)
+    })
+  }
+
+  // 主题同步处理器
+  ipcMain.handle('theme:update', (_, theme: 'system' | 'light' | 'dark' | 'auto') => {
+    // 在这里可以处理主进程的主题更新逻辑
+    // 例如更新原生菜单、托盘图标等
+
+    // 如果是 macOS，可以更新原生标题栏外观
+    if (process.platform === 'darwin' && mainWindow) {
+      // 更新原生主题
+      nativeTheme.themeSource = theme === 'auto' ? 'system' : theme as 'system' | 'light' | 'dark'
+    }
+  })
+
   // File system handlers
   ipcMain.handle('fs:writeFile', async (_, filePath: string, content: string) => {
     try {
       await writeFile(filePath, content, 'utf8')
       return { success: true }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to write file:', error)
       return {
         success: false,
@@ -228,7 +266,8 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
     try {
       const content = await readFile(filePath, 'utf8')
       return content
-    } catch (error) {
+    }
+    catch (error) {
       throw new Error(`读取文件失败: ${error instanceof Error ? error.message : String(error)}`)
     }
   })
@@ -237,7 +276,8 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
     try {
       await copyFile(src, dest)
       return { success: true }
-    } catch (error) {
+    }
+    catch (error) {
       throw new Error(`复制文件失败: ${error instanceof Error ? error.message : String(error)}`)
     }
   })
@@ -246,7 +286,8 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
     try {
       await access(filePath, constants.F_OK)
       return true
-    } catch {
+    }
+    catch {
       return false
     }
   })
@@ -261,7 +302,8 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
         mtime: stats.mtime,
         ctime: stats.ctime,
       }
-    } catch (error) {
+    }
+    catch (error) {
       throw new Error(`获取文件信息失败: ${error instanceof Error ? error.message : String(error)}`)
     }
   })
@@ -270,12 +312,13 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
   ipcMain.handle('sqlite:cleanAugmentData', async (_, dbPath: string) => {
     try {
       const db = new Database(dbPath)
-      const stmt = db.prepare("DELETE FROM ItemTable WHERE key LIKE '%augment%'")
+      const stmt = db.prepare('DELETE FROM ItemTable WHERE key LIKE \'%augment%\'')
       const result = stmt.run()
       db.close()
 
       return { deletedRows: result.changes }
-    } catch (error) {
+    }
+    catch (error) {
       throw new Error(`清理数据库失败: ${error instanceof Error ? error.message : String(error)}`)
     }
   })
@@ -284,10 +327,11 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
     try {
       const db = new Database(dbPath, { readonly: true })
       // 尝试查询表结构来验证数据库
-      const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all()
+      const tables = db.prepare('SELECT name FROM sqlite_master WHERE type=\'table\'').all()
       db.close()
       return tables.length > 0
-    } catch {
+    }
+    catch {
       return false
     }
   })
@@ -296,11 +340,12 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
     try {
       const db = new Database(dbPath, { readonly: true })
       const result = db
-        .prepare("SELECT COUNT(*) as count FROM ItemTable WHERE key LIKE '%augment%'")
+        .prepare('SELECT COUNT(*) as count FROM ItemTable WHERE key LIKE \'%augment%\'')
         .get() as { count: number }
       db.close()
       return result.count
-    } catch {
+    }
+    catch {
       return 0
     }
   })
@@ -308,14 +353,14 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
   ipcMain.handle('sqlite:getDatabaseInfo', async (_, dbPath: string) => {
     try {
       const db = new Database(dbPath, { readonly: true })
-      const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as {
+      const tables = db.prepare('SELECT name FROM sqlite_master WHERE type=\'table\'').all() as {
         name: string
       }[]
       const totalRecords = db.prepare('SELECT COUNT(*) as count FROM ItemTable').get() as {
         count: number
       }
       const augmentRecords = db
-        .prepare("SELECT COUNT(*) as count FROM ItemTable WHERE key LIKE '%augment%'")
+        .prepare('SELECT COUNT(*) as count FROM ItemTable WHERE key LIKE \'%augment%\'')
         .get() as { count: number }
       db.close()
 
@@ -324,9 +369,10 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
         totalRecords: totalRecords.count,
         augmentRecords: augmentRecords.count,
       }
-    } catch (error) {
+    }
+    catch (error) {
       throw new Error(
-        `获取数据库信息失败: ${error instanceof Error ? error.message : String(error)}`
+        `获取数据库信息失败: ${error instanceof Error ? error.message : String(error)}`,
       )
     }
   })
@@ -335,11 +381,12 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
     try {
       const db = new Database(dbPath, { readonly: true })
       const records = db
-        .prepare("SELECT key, value FROM ItemTable WHERE key LIKE '%augment%' LIMIT 50")
-        .all() as { key: string; value: string }[]
+        .prepare('SELECT key, value FROM ItemTable WHERE key LIKE \'%augment%\' LIMIT 50')
+        .all() as { key: string, value: string }[]
       db.close()
       return records
-    } catch {
+    }
+    catch {
       return []
     }
   })
@@ -352,16 +399,19 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
 
       if (platform === 'win32') {
         command = 'tasklist /FI "IMAGENAME eq Code.exe" /FO CSV | find /C "Code.exe"'
-      } else if (platform === 'darwin') {
+      }
+      else if (platform === 'darwin') {
         command = 'pgrep -f "Visual Studio Code" | wc -l'
-      } else {
+      }
+      else {
         command = 'pgrep -f "code" | wc -l'
       }
 
       const { stdout } = await execAsync(command)
-      const count = parseInt(stdout.trim(), 10)
+      const count = Number.parseInt(stdout.trim(), 10)
       return count > 0
-    } catch {
+    }
+    catch {
       return false
     }
   })
@@ -371,40 +421,46 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
     try {
       const platform = process.platform
       let command: string
-      
+
       if (platform === 'win32') {
         command = 'taskkill /F /IM Code.exe'
-      } else if (platform === 'darwin') {
+      }
+      else if (platform === 'darwin') {
         command = 'pkill -9 "Visual Studio Code"'
-      } else {
+      }
+      else {
         command = 'pkill -9 code'
       }
-      
+
       await execAsync(command)
       return true
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to close VSCode:', error)
       return false
     }
   })
-  
+
   ipcMain.handle('process:reopenVSCode', async () => {
     try {
       const platform = process.platform
       let command: string
-      
+
       if (platform === 'win32') {
         command = 'start /b "" "code"'
-      } else if (platform === 'darwin') {
+      }
+      else if (platform === 'darwin') {
         command = 'open -a "Visual Studio Code"'
-      } else {
+      }
+      else {
         command = 'nohup code > /dev/null 2>&1 &'
       }
-      
+
       await new Promise(resolve => setTimeout(resolve, 500))
       await execAsync(command)
       return true
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to reopen VSCode:', error)
       return false
     }
@@ -415,7 +471,8 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
     try {
       await shell.openExternal(url)
       return { success: true }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to open external URL:', error)
       return {
         success: false,
@@ -440,7 +497,8 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
         totalDirectories: counters.totalDirectories,
         totalSize: counters.totalSize,
       }
-    } catch {
+    }
+    catch {
       return { exists: false, totalFiles: 0, totalDirectories: 0, totalSize: 0 }
     }
   })
@@ -475,10 +533,11 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
         }
 
         return contents
-      } catch {
+      }
+      catch {
         return []
       }
-    }
+    },
   )
 
   ipcMain.handle('workspace:cleanStorage', async (_, workspacePath: string) => {
@@ -504,7 +563,8 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
         failedOperations: [],
         failedCompressions: [],
       }
-    } catch (error) {
+    }
+    catch (error) {
       throw new Error(`清理工作区失败: ${error instanceof Error ? error.message : String(error)}`)
     }
   })
@@ -517,7 +577,8 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
       // 这里应该实现实际的 zip 压缩
       // 暂时返回备份路径
       return backupPath
-    } catch (error) {
+    }
+    catch (error) {
       throw new Error(`创建备份失败: ${error instanceof Error ? error.message : String(error)}`)
     }
   })
@@ -527,7 +588,8 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
       // 这里应该实现从 zip 文件恢复
       // 暂时只是一个占位符
       return { success: true }
-    } catch (error) {
+    }
+    catch (error) {
       throw new Error(`恢复备份失败: ${error instanceof Error ? error.message : String(error)}`)
     }
   })
@@ -545,10 +607,12 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
       if (platform === 'win32') {
         // 使用/F强制关闭，确保能关闭所有VS Code进程
         command = 'taskkill /F /IM Code.exe'
-      } else if (platform === 'darwin') {
+      }
+      else if (platform === 'darwin') {
         // 使用-9强制终止所有相关进程
         command = 'pkill -9 -f "Visual Studio Code" || pkill -9 -x "Code"'
-      } else {
+      }
+      else {
         // 使用-9强制终止所有相关进程
         command = 'pkill -9 -f "code" || pkill -9 -x "code-oss" || true'
       }
@@ -558,16 +622,18 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
         // 等待一小段时间确保进程已关闭
         await new Promise(resolve => setTimeout(resolve, 500))
         return true
-      } catch (execError) {
+      }
+      catch (execError) {
         // 在Windows上，如果没有找到进程，taskkill会返回错误
         // 但这种情况我们应该返回true，因为这意味着VS Code已经不在运行
         console.log('关闭VS Code结果:', execError.message)
-        
+
         // 直接重新检查VS Code是否在运行
         const isRunning = await checkVSCodeRunning()
         return !isRunning
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('关闭 VS Code 失败:', error)
       return false
     }
@@ -582,9 +648,11 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
       if (platform === 'win32') {
         // 在Windows上使用start /b命令隐藏命令窗口
         command = 'start /b "" "code"'
-      } else if (platform === 'darwin') {
+      }
+      else if (platform === 'darwin') {
         command = 'open -a "Visual Studio Code"'
-      } else {
+      }
+      else {
         // 在Linux上使用nohup并将输出重定向到/dev/null
         command = 'nohup code > /dev/null 2>&1 &'
       }
@@ -600,9 +668,10 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null) {
 
       // 添加延迟确保命令正确执行
       await execAsync(command)
-      
+
       return true
-    } catch (error) {
+    }
+    catch (error) {
       console.error('重新打开 VS Code 失败:', error)
       return false
     }
@@ -649,7 +718,7 @@ export function removeIpcHandlers() {
     'vscode:reopen',
   ]
 
-  handlers.forEach(handler => {
+  handlers.forEach((handler) => {
     ipcMain.removeAllListeners(handler)
   })
 }
@@ -662,27 +731,31 @@ async function checkVSCodeRunning(): Promise<boolean> {
 
     if (platform === 'win32') {
       command = 'tasklist /FI "IMAGENAME eq Code.exe" | findstr /i "Code.exe" >nul 2>&1 && echo running || echo not-running'
-    } else if (platform === 'darwin') {
+    }
+    else if (platform === 'darwin') {
       command = 'pgrep -f "Visual Studio Code" || pgrep -x "Code" || pgrep -f "Electron.*Code"'
-    } else {
+    }
+    else {
       command = 'pgrep -x "code" || pgrep -x "code-oss" || pgrep -f "electron.*code"'
     }
 
     try {
       const { stdout } = await execAsync(command)
-      
+
       if (platform === 'win32') {
         return stdout.trim() === 'running'
       }
-      
+
       return stdout.trim().length > 0
-    } catch (execError) {
+    }
+    catch (execError) {
       if (execError.code === 1) {
         return false
       }
       throw execError
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('检查 VS Code 运行状态失败:', error)
     return false
   }

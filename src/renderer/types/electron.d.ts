@@ -28,6 +28,9 @@ export interface ElectronAPI {
   closeWindow: () => Promise<void>
   isWindowMaximized: () => Promise<boolean>
 
+  // Theme management
+  updateTheme: (theme: string) => Promise<void>
+
   // VSCode process controls
   closeVSCode: () => Promise<boolean>
   reopenVSCode: () => Promise<boolean>

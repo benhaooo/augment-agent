@@ -140,6 +140,3 @@ out/
 # OS
 .DS_Store
 Thumbs.db
-
-# Legacy Python Code
-/legacy-python-code/

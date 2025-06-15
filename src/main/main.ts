@@ -1,13 +1,17 @@
+import { join } from 'node:path'
+import process from 'node:process'
+import { attachTitlebarToWindow, setupTitlebar } from 'custom-electron-titlebar/main'
 import { app, BrowserWindow, shell } from 'electron'
-import { join } from 'path'
+import { removeIpcHandlers, setupIpcHandlers } from './ipcHandlers'
 import { createMenu } from './menu'
-import { setupIpcHandlers, removeIpcHandlers } from './ipcHandlers'
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // This is only needed for production builds with Squirrel installer
 // if (require('electron-squirrel-startup')) {
 //   app.quit()
 // }
+
+setupTitlebar()
 
 class ElectronApp {
   private mainWindow: BrowserWindow | null = null
@@ -58,9 +62,11 @@ class ElectronApp {
       minWidth: 800,
       minHeight: 600,
       show: false,
-      autoHideMenuBar: true, // 隐藏菜单栏，按 Alt 键显示
-      titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
+      frame: false,
+      titleBarStyle: 'hidden',
+      titleBarOverlay: true,
       webPreferences: {
+        sandbox: false,
         nodeIntegration: false,
         contextIsolation: true,
         preload: join(__dirname, '../preload/preload.cjs'),
@@ -68,13 +74,15 @@ class ElectronApp {
         allowRunningInsecureContent: false,
       },
     })
+    attachTitlebarToWindow(this.mainWindow)
 
     // Load the app
     if (this.isDev) {
       this.mainWindow.loadURL('http://localhost:5173')
       // Open DevTools in development
       this.mainWindow.webContents.openDevTools()
-    } else {
+    }
+    else {
       this.mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
     }
 

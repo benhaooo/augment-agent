@@ -15,7 +15,7 @@ export interface ErrorHandlerOptions {
 export async function handleError(
   error: unknown,
   message: string,
-  options: ErrorHandlerOptions = {}
+  options: ErrorHandlerOptions = {},
 ): Promise<void> {
   const {
     showUserNotification = true,
@@ -40,7 +40,8 @@ export async function handleError(
         title,
         message: fullMessage,
       })
-    } catch (notificationError) {
+    }
+    catch (notificationError) {
       console.error('Failed to show error notification:', notificationError)
     }
   }
@@ -57,7 +58,8 @@ export async function handleSuccess(message: string, title: string = 'Success'):
         title,
         message,
       })
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to show success notification:', error)
     }
   }
@@ -69,11 +71,12 @@ export async function handleSuccess(message: string, title: string = 'Success'):
 export async function withErrorHandling<T>(
   operation: () => Promise<T>,
   errorMessage: string,
-  options?: ErrorHandlerOptions
+  options?: ErrorHandlerOptions,
 ): Promise<T | null> {
   try {
     return await operation()
-  } catch (error) {
+  }
+  catch (error) {
     await handleError(error, errorMessage, options)
     return null
   }

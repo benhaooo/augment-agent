@@ -1,4 +1,4 @@
-import { Menu, shell, app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, Menu, shell } from 'electron'
 
 export function createMenu(): void {
   const template: Electron.MenuItemConstructorOptions[] = [

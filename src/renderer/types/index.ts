@@ -15,7 +15,11 @@ export interface SystemInfo {
   chromeVersion: string
 }
 
-
+export interface FeatureCardProps {
+  title: string
+  description: string
+  icon: string
+}
 
 export interface FormData {
   name: string

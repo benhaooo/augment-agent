@@ -1,7 +1,7 @@
-import { ref, onMounted } from 'vue'
-import type { SystemInfo } from '@/types'
 // 添加 Electron 类型导入
 import type { MessageBoxOptions, OpenDialogOptions, SaveDialogOptions } from 'electron'
+import type { SystemInfo } from '@/types'
+import { onMounted, ref } from 'vue'
 
 /**
  * Composable for interacting with Electron APIs
@@ -15,7 +15,8 @@ export function useElectron() {
   }
 
   const getSystemInfo = async (): Promise<SystemInfo | null> => {
-    if (!window.electronAPI) return null
+    if (!window.electronAPI)
+      return null
 
     try {
       const [platform, version] = await Promise.all([
@@ -36,44 +37,52 @@ export function useElectron() {
 
       systemInfo.value = info
       return info
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to get system info:', error)
       return null
     }
   }
 
   const showMessageBox = async (options: MessageBoxOptions) => {
-    if (!window.electronAPI) return null
+    if (!window.electronAPI)
+      return null
     return await window.electronAPI.showMessageBox(options)
   }
 
   const showOpenDialog = async (options: OpenDialogOptions) => {
-    if (!window.electronAPI) return null
+    if (!window.electronAPI)
+      return null
     return await window.electronAPI.showOpenDialog(options)
   }
 
   const showSaveDialog = async (options: SaveDialogOptions) => {
-    if (!window.electronAPI) return null
+    if (!window.electronAPI)
+      return null
     return await window.electronAPI.showSaveDialog(options)
   }
 
   const minimizeWindow = async () => {
-    if (!window.electronAPI) return
+    if (!window.electronAPI)
+      return
     await window.electronAPI.minimizeWindow()
   }
 
   const maximizeWindow = async () => {
-    if (!window.electronAPI) return
+    if (!window.electronAPI)
+      return
     await window.electronAPI.maximizeWindow()
   }
 
   const closeWindow = async () => {
-    if (!window.electronAPI) return
+    if (!window.electronAPI)
+      return
     await window.electronAPI.closeWindow()
   }
 
   const isWindowMaximized = async (): Promise<boolean> => {
-    if (!window.electronAPI) return false
+    if (!window.electronAPI)
+      return false
     return await window.electronAPI.isWindowMaximized()
   }
 
